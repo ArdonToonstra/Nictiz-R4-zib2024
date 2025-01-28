@@ -1,0 +1,7 @@
+input_dirs:
+  - "C:\\git\\nictiz-r4-zib2024-forked\\zib"
+  - "C:\\git\\nictiz-r4-zib2024-forked\\nl-core"
+  - "C:\\git\\nictiz-r4-zib2024-forked\\examples"
+output_dir: "C:\\git\\nictiz-r4-zib2024-forked\\guides\\dev-zib2020-r4\\Home\\Resource"
+log_file: "util/IGpageGenerator/logging.log"
+log_level: "DEBUG"
