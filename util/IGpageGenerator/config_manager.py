@@ -6,8 +6,9 @@ class ConfigManager:
     """
     Handles configuration loading, validation, and logging setup.
     """
-    def __init__(self, config_path, default_log_file="logging.log", default_log_level="INFO"):
+    def __init__(self, config_path, default_output_dir="guides", default_log_file="logging.log", default_log_level="INFO"):
         self.config_path = config_path
+        self.default_output_dir = default_output_dir
         self.default_log_file = default_log_file
         self.default_log_level = default_log_level
         self.config = None
@@ -41,6 +42,15 @@ class ConfigManager:
             list: List of input directories.
         """
         return self.config.get("input_dirs", [])
+
+    def get_output_dir(self):
+        """
+        Retrieve output directory from the configuration.
+
+        Returns:
+            string: output directoru.
+        """
+        return self.config.get("output_dir", self.default_output_dir)
 
     def setup_logging(self):
         """

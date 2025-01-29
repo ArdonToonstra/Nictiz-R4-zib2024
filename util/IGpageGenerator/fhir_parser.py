@@ -48,10 +48,10 @@ class FHIRResourceParser:
             with open(file_path, 'r', encoding='utf-8') as f:
                 resource = json.load(f)
             logging.info(f"Successfully parsed JSON file: {file_path}")
-            return resource, 'JSON'
+            return resource
         except Exception as e:
             logging.error(f"Could not parse JSON file {file_path}: {e}")
-            return None, None
+            return None
     
     @staticmethod
     def parse_xml(file_path):
@@ -68,13 +68,13 @@ class FHIRResourceParser:
                 resourceType = FHIRResourceParser.import_from(f"fhir.resources.R4B.{resource_name.lower()}", resource_name)
                 resource = resourceType.model_validate_xml(cleaned_xml)
                 logging.info(f"Successfully parsed {resource_name}: {file_path}")
-                return resource, resource_name
+                return resource
             except Exception as e:
                 logging.warning(f"Unknown or unsupported FHIR resource type '{resource_name}' in file: {file_path} - {e}")
-                return None, None
+                return None
         except Exception as e:
             logging.error(f"Could not parse XML file {file_path}: {e}")
-            return None, None
+            return None
 
     @staticmethod
     def parse_fhir_resources(input_dirs):
@@ -85,30 +85,31 @@ class FHIRResourceParser:
             input_dirs (list): List of directories to parse.
 
         Returns:
-            list: A list of dictionaries containing resourceType, id, and file_path.
+            list: A list of dictionaries containing resourceType, id, and file_path and the resource itself.
         """
-        parsed_resources = []
+        resources = []
 
         for path in input_dirs:
             for root, _, files in os.walk(path):
                 for file_name in files:
                     file_path = os.path.join(root, file_name)
-                    resource, resource_format = None, None
+                    resource = None
 
                     # Parse JSON and XML files
                     if file_name.endswith('.json'):
-                        resource, resource_format = FHIRResourceParser.parse_json(file_path)
+                        resource = FHIRResourceParser.parse_json(file_path)
                     elif file_name.endswith('.xml'):
-                        resource, resource_format = FHIRResourceParser.parse_xml(file_path)
+                        resource = FHIRResourceParser.parse_xml(file_path)
 
                     # Collect resource metadata if successfully parsed
                     if resource:
                         resource_type = resource.get_resource_type()
                         resource_id = resource.id
-                        parsed_resources.append({
+                        resources.append({
                             "resourceType": resource_type,
                             "id": resource_id,
                             "file_path": file_path,
+                            "resource": resource	
                         })
 
-        return parsed_resources
+        return resources

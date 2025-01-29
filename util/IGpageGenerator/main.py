@@ -15,13 +15,6 @@ if __name__ == "__main__":
         default="util/IGpageGenerator/config.yaml",
         help="Path to the configuration file (default: config.yaml)."
     )
-    parser.add_argument(
-        "--output_dir",
-        type=str,
-        required=False,
-        default="output",
-        help="Directory to store generated markdown files (default: output)."
-    )
     args = parser.parse_args()
 
     # Initialize and load configuration
@@ -31,6 +24,7 @@ if __name__ == "__main__":
         config_manager.load_config()
         config_manager.setup_logging()
         input_dirs = config_manager.get_input_dirs()
+        output_dir = config_manager.get_output_dir()
     except Exception as e:
         print(f"Configuration error: {e}")
         exit(1)
@@ -39,13 +33,14 @@ if __name__ == "__main__":
     parsed_resources = FHIRResourceParser.parse_fhir_resources(input_dirs)
 
     # Initialize MarkdownGenerator
-    markdown_generator = MarkdownGenerator(output_dir=args.output_dir)
+    markdown_generator = MarkdownGenerator(output_dir)
 
     # Generate markdown files for parsed resources
     for resource in parsed_resources:
         markdown_generator.generate_markdown(
             resource_type=resource["resourceType"],
-            resource_id=resource["id"]
+            resource_id=resource["id"],
+            resource=resource["resource"]
         )
 
     print(f"Generated markdown files for {len(parsed_resources)} resources.")
