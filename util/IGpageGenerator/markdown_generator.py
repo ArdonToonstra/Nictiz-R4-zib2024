@@ -50,13 +50,63 @@ class MarkdownGenerator:
                     md_file.write(f"buttons: yes\n")
                     md_file.write(f"expand: 2\n")
                     md_file.write(f"---\n\n")
-                    md_file.write(f"# {resource_title}\n")
+                    md_file.write(f"# {resource_title}\n\n")
                     md_file.write("{{page:Metadata-table}}\n")
                     md_file.write("{{page:FQL-get-resource-description}}\n\n")
                     md_file.write("{{page:Resource-StructureDefinition-View}}\n\n")
-                    md_file.write("<!---start manual part--->\n")
+                    
 
-                md_file.write("")  # Placeholder for future content
+                elif resource_type == 'ValueSet':
+                    resource_url = resource.url
+                    resource_title = resource.title
+
+                    md_file.write(f"---\n")
+                    md_file.write(f"topic: {resource_type}-{resource_id}\n")
+                    md_file.write(f"canonical: {resource_url}\n")
+                    md_file.write(f"buttons: yes\n")
+                    md_file.write(f"expand: 2\n")
+                    md_file.write(f"---\n\n")
+                    md_file.write(f"# {resource_title}\n\n")
+                    md_file.write("{{page:Metadata-table}}\n")
+                    md_file.write("{{page:FQL-get-resource-description}}\n\n")
+                    md_file.write("{{page:Resource-ValueSet-View}}\n\n")
+                    
+                elif resource_type == 'CodeSystem':
+                    md_file.write(f"---\n")
+                    md_file.write(f"topic: {resource_type}-{resource_id}\n")
+                    md_file.write(f"canonical: {resource.url}\n")
+                    md_file.write(f"buttons: yes\n")
+                    md_file.write(f"expand: 2\n")
+                    md_file.write(f"---\n\n")
+                    md_file.write(f"# {resource_title}\n\n")
+                    md_file.write("{{page:Metadata-table}}\n")
+                    md_file.write("{{page:FQL-get-resource-description}}\n\n")
+                    md_file.write("{{page:Resource-CodeSystem-View}}\n\n")
+
+                elif resource_type == 'ConceptMap':
+                    md_file.write(f"---\n")
+                    md_file.write(f"topic: {resource_type}-{resource_id}\n")
+                    md_file.write(f"canonical: {resource.url}\n")
+                    md_file.write(f"buttons: yes\n")
+                    md_file.write(f"expand: 2\n")
+                    md_file.write(f"---\n\n")
+                    md_file.write(f"# {resource_title}\n\n")
+                    md_file.write("{{page:Metadata-table}}\n")
+                    md_file.write("{{page:FQL-get-resource-description}}\n\n")
+                    md_file.write("{{page:Resource-ConceptMap-View}}\n\n")
+                    
+
+                else:
+                    md_file.write(f"---\n")
+                    md_file.write(f"topic: {resource_type}-{resource_id}\n")
+                    md_file.write(f"subject: {resource_type}/{resource_id}\n")
+                    md_file.write(f"expand: 2\n")
+                    md_file.write(f"---\n\n")
+                    md_file.write(f"# {resource_id}\n\n")
+                    md_file.write("{{page:Resource-Example}}\n")
+                    
+
+                md_file.write("") 
             logging.info(f"Generated Markdown file: {md_file_path}")
             return str(md_file_path)
         except Exception as e:

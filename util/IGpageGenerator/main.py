@@ -44,3 +44,21 @@ if __name__ == "__main__":
         )
 
     print(f"Generated markdown files for {len(parsed_resources)} resources.")
+
+
+    # Generate a markdown list for zib-* StructureDefinitions
+    zib_resources = sorted(
+        [res for res in parsed_resources if res["resourceType"] == "StructureDefinition" and res["id"].startswith("zib-")],
+        key=lambda x: x["id"]
+    )
+
+    # Define the markdown file path
+    zib_list_filepath = os.path.join(output_dir, "zib_structure_definitions.md")
+
+    # Write the list to the markdown file
+    with open(zib_list_filepath, "w", encoding="utf-8") as md_file:
+        md_file.write("# Zib StructureDefinitions\n\n")
+        for res in zib_resources:
+            md_file.write(f"* {{{{pagelink:{res['resourceType']}-{res['id']}}}}}\n")
+
+    print(f"Markdown file for zib-* StructureDefinitions created at: {zib_list_filepath}")
