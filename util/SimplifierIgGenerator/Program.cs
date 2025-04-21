@@ -1,16 +1,20 @@
 ﻿// Program.cs
 using Hl7.Fhir.Model;
+using Microsoft.Extensions.Configuration; 
+using Microsoft.Extensions.DependencyInjection; 
+using Microsoft.Extensions.Logging; 
 using System;
 using System.Collections.Generic;
-using System.IO; // Needed for Path.Combine
+using System.IO;
+using System.Linq; 
 
 class Program
 {
     static void Main(string[] args)
     {
-        Console.WriteLine("Starting FHIR IG Generator..."); // Initial message before logger starts
+        Console.WriteLine("Starting FHIR IG Generator..."); 
 
-        AppSettings? settings = null; // Define settings variable outside try block
+        AppSettings? settings = null; 
 
         try
         {

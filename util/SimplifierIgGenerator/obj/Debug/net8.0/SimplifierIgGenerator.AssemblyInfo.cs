@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SimplifierIgGenerator")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+59e4c8e99434948a30b9450db453de6ba4837735")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a4e2a9dee44950fd6a1ecd64b9b4d25cd40683d5")]
 [assembly: System.Reflection.AssemblyProductAttribute("SimplifierIgGenerator")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SimplifierIgGenerator")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

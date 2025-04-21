@@ -54,6 +54,22 @@ public static class ConfigurationLoader
                  Logger.Info("SourceStylesDirectory not configured. Styles will not be copied.");
             }
 
+             if (!string.IsNullOrEmpty(settings.SourceTemplatePagesDirectory))
+            {
+                if (!Directory.Exists(settings.SourceTemplatePagesDirectory))
+                {
+                    Logger.Warning($"Configured SourceTemplatePagesDirectory not found: {settings.SourceTemplatePagesDirectory}");
+                }
+                else
+                {
+                    Logger.Info($"Source TemplatePages directory found: {settings.SourceTemplatePagesDirectory}");
+                }
+            }
+            else
+            {
+                 Logger.Info("SourceTemplatePagesDirectory not configured. TemplatePages will not be copied.");
+            }
+
             Logger.Success("Configuration loaded successfully.");
             return settings;
         }

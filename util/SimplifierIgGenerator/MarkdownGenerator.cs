@@ -1,7 +1,9 @@
 // MarkdownGenerator.cs
 using Hl7.Fhir.Model;
 using Hl7.Fhir.Serialization;
+using System; // Needed for StringComparison
 using System.Text;
+
 
 public static class MarkdownGenerator
 {
@@ -10,27 +12,40 @@ public static class MarkdownGenerator
     /// </summary>
     /// <param name="resource">The FHIR resource.</param>
     /// <param name="baseFileName">The base filename (Type-Id) used for topic links etc.</param>
+    /// <param name="category">The category ("Conformance", "Terminology", "Example", etc.)</param> /// <New Parameter>
     /// <returns>A string containing the generated Markdown.</returns>
-    public static string GenerateMarkdown(Resource resource, string baseFileName)
+    public static string GenerateMarkdown(Resource resource, string baseFileName, string category) // <Signature Updated>
     {
         var markdownContent = new StringBuilder();
 
-        // Use 'is' pattern matching for cleaner type checks and casting
-        switch (resource)
+        // *** Switch based on the category passed from OutputGenerator ***
+        switch (category)
         {
-            case StructureDefinition sd:
-                GenerateStructureDefinitionMarkdown(markdownContent, sd, baseFileName);
+            case "Conformance":
+                // Still check specific type if needed within the category
+                if (resource is StructureDefinition sd)
+                {
+                    GenerateStructureDefinitionMarkdown(markdownContent, sd, baseFileName);
+                }
+                else
+                {
+                    // Fallback for other Conformance types (e.g., SearchParameter)
+                    GenerateDefaultMarkdown(markdownContent, resource); // Use JSON dump for now
+                }
                 break;
 
-            // Future cases for other specific resource types can be added here:
-            // case ValueSet vs:
-            //     GenerateValueSetMarkdown(markdownContent, vs, baseFileName);
-            //     break;
-            // case CodeSystem cs:
-            //     GenerateCodeSystemMarkdown(markdownContent, cs, baseFileName);
-            //     break;
+            case "Terminology":
+                 // Add specific templates for ValueSet, CodeSystem etc. here later if needed
+                 // For now, use the default JSON dump
+                 GenerateDefaultMarkdown(markdownContent, resource);
+                 break;
 
-            default: // Fallback for any resource type not specifically handled
+            case "Example":
+                GenerateExampleMarkdown(markdownContent, resource, baseFileName);
+                break;
+
+            default: // True fallback for any unexpected category or resource
+                Logger.Warning($"Unexpected resource category '{category}' encountered for {baseFileName}. Using default markdown.");
                 GenerateDefaultMarkdown(markdownContent, resource);
                 break;
         }
@@ -38,12 +53,12 @@ public static class MarkdownGenerator
         return markdownContent.ToString();
     }
 
-    // --- Specific generator for StructureDefinition ---
+    // --- Specific generator for StructureDefinition (Unchanged) ---
     private static void GenerateStructureDefinitionMarkdown(StringBuilder sb, StructureDefinition sd, string baseFileName)
     {
+        // ... (content remains the same) ...
         string title = string.IsNullOrWhiteSpace(sd.Title) ? (sd.Id ?? "Unknown") : sd.Title;
         string canonical = sd.Url ?? "urn:undefined";
-
         sb.AppendLine("---");
         sb.AppendLine($"topic: {baseFileName}");
         sb.AppendLine($"canonical: {canonical}");
@@ -55,22 +70,31 @@ public static class MarkdownGenerator
         sb.AppendLine();
         sb.AppendLine("{{page:Metadata-table}}");
         sb.AppendLine("{{page:FQL-get-resource-description}}");
-        sb.AppendLine("{{page:Resource-StructureDefinition-View}}");
+        sb.AppendLine("{{page:Resource-Content-View}}");
     }
 
-    // --- Specific generator for ValueSet (Example - Implement content later) ---
-    // private static void GenerateValueSetMarkdown(StringBuilder sb, ValueSet vs, string baseFileName)
-    // {
-    //     sb.AppendLine("---");
-    //     sb.AppendLine($"topic: {baseFileName}");
-    //     // Add other front matter for ValueSet
-    //     sb.AppendLine("---");
-    //     sb.AppendLine($"# ValueSet: {vs.Name ?? vs.Id}");
-    //     // Add specific ValueSet page includes or content
-    // }
+    private static void GenerateExampleMarkdown(StringBuilder sb, Resource resource, string baseFileName)
+    {
+        string subjectValue = baseFileName;
+        int firstHyphenIndex = baseFileName.IndexOf('-');
+        if (firstHyphenIndex >= 0)
+        {
+            // Replace first hyphen with slash
+            subjectValue = baseFileName.Substring(0, firstHyphenIndex) + "/" + baseFileName.Substring(firstHyphenIndex + 1);
+        }
+        // If no hyphen, subjectValue remains baseFileName
 
+        sb.AppendLine("---");
+        sb.AppendLine($"topic: {baseFileName}");
+        sb.AppendLine($"subject: {subjectValue}"); // Use the modified value
+        sb.AppendLine("---");
+        sb.AppendLine();
+        sb.AppendLine("# {{page-title}}");
+        sb.AppendLine();
+        sb.AppendLine("{{page:Resource-Example}}");
+    }
 
-    // --- Default generator for unspecified resource types ---
+    // --- Default generator (JSON dump - now the true fallback) ---
     private static void GenerateDefaultMarkdown(StringBuilder sb, Resource resource)
     {
         sb.AppendLine($"# {resource.TypeName}: {resource.Id ?? "[No ID]"}");

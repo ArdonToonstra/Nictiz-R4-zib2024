@@ -33,9 +33,10 @@ public static class OutputGenerator
         string examplesPath = Path.Combine(resourcesBasePath, "Examples");
         string guideYamlPath = Path.Combine(baseIgOutputPath, "guide.yaml");
         string destStylesPath = Path.Combine(baseIgOutputPath, "styles");
-        string indexPagePath = Path.Combine(baseIgOutputPath, "Home", "Index.page.md"); // Path for the new index page
+        string indexPagePath = Path.Combine(baseIgOutputPath, "Home", "Index.page.md"); 
+        string rootTocPath = Path.Combine(baseIgOutputPath, "toc.yaml");
+        string destTemplatePagesPath = Path.Combine(homeDirectoryPath, "TemplatePages");
      
-
         try
         {
             Directory.CreateDirectory(conformancePath); 
@@ -43,16 +44,21 @@ public static class OutputGenerator
             Directory.CreateDirectory(examplesPath);  
             Logger.Info($"Ensured output structure exists at: {resourcesBasePath}");
 
-            // --- Copy Styles Directory (if configured and source exists) ---
+            // --- Copy Styles and Template page directories (if configured and source exists) ---
             if (!string.IsNullOrEmpty(settings.SourceStylesDirectory) && Directory.Exists(settings.SourceStylesDirectory))
             {
                  CopyStylesDirectoryIfNotExists(settings.SourceStylesDirectory, destStylesPath);
             }
-            // --- End Copy Styles ---
+            if (!string.IsNullOrEmpty(settings.SourceTemplatePagesDirectory) && Directory.Exists(settings.SourceTemplatePagesDirectory))
+            {
+                 CopyStaticAssetDirectoryIfNotExists(settings.SourceTemplatePagesDirectory, destTemplatePagesPath, "TemplatePages"); // Pass asset type name
+            }
+            // --- End Copy ---
 
             GenerateGuideYaml(settings, guideYamlPath);
             CategorizedFiles categorizedFileNames = GenerateResourceFiles(settings, resources, conformancePath, terminologyPath, examplesPath);
             GenerateIndexPage(indexPagePath, categorizedFileNames);
+            GenerateStaticRootToc(rootTocPath);
             GenerateTocFiles(homeDirectoryPath);
 
         }
@@ -62,12 +68,11 @@ public static class OutputGenerator
         }
     }
 
-// --- New Helper Method to Copy Styles ---
     private static void CopyStylesDirectoryIfNotExists(string sourceDir, string destinationDir)
     {
         if (Directory.Exists(destinationDir))
         {
-            Logger.Info($"Styles directory already exists at {destinationDir}. Skipping copy.");
+            Logger.Warning($"Styles directory already exists at {destinationDir}. Skipping copy.");
             return;
         }
 
@@ -85,6 +90,34 @@ public static class OutputGenerator
                  if(Directory.Exists(destinationDir)) Directory.Delete(destinationDir, true);
             } catch (Exception cleanupEx) {
                  Logger.Error($"Failed to cleanup partially copied styles directory {destinationDir}: {cleanupEx.Message}");
+            }
+        }
+    }
+
+    // --- Updated Helper Method name and logging for generic usage ---
+    private static void CopyStaticAssetDirectoryIfNotExists(string sourceDir, string destinationDir, string assetTypeName)
+    {
+        if (Directory.Exists(destinationDir))
+        {
+            Logger.Warning($"{assetTypeName} directory already exists at {Path.GetFileName(destinationDir)}. Skipping copy."); // Use Path.GetFileName for clarity
+            return;
+        }
+
+        Logger.Info($"Copying {assetTypeName} from {sourceDir} to {destinationDir}...");
+        try
+        {
+            CopyDirectoryRecursive(sourceDir, destinationDir); // Recursive copy logic remains the same
+            Logger.Success($"Successfully copied {assetTypeName} directory.");
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Failed to copy {assetTypeName} directory: {ex.Message}");
+            // Optional: Attempt to clean up partially copied directory
+            try
+            {
+                 if(Directory.Exists(destinationDir)) Directory.Delete(destinationDir, true);
+            } catch (Exception cleanupEx) {
+                 Logger.Error($"Failed to cleanup partially copied {assetTypeName} directory {destinationDir}: {cleanupEx.Message}");
             }
         }
     }
@@ -134,11 +167,11 @@ public static class OutputGenerator
             yamlContent.AppendLine($"description: {settings.IgDescription}");
             yamlContent.AppendLine($"version: {settings.IgVersion}");
             yamlContent.AppendLine("style-root: styles");
-            yamlContent.AppendLine("style-name: ballotable");
+            yamlContent.AppendLine("style-name: custom");
             yamlContent.AppendLine("numbered-headings: false");
 
             File.WriteAllText(guideYamlPath, yamlContent.ToString());
-            Logger.Magenta($"  Successfully wrote: guide.yaml");
+            Logger.Success($"  Successfully wrote: guide.yaml");
         }
         catch (Exception ex)
         {
@@ -158,10 +191,11 @@ public static class OutputGenerator
         {
             string resourceId = resource.Id ?? $"generated-{Guid.NewGuid()}";
             string baseFileName = $"{resource.TypeName}-{resourceId}";
-            string markdownFileName = $"{baseFileName}.md";
+            string markdownFileName = $"{baseFileName}.page.md";
 
             string targetDirectory;
             List<string> targetList; 
+            string fileCategory;
 
             switch (resource.TypeName)
             {
@@ -172,6 +206,7 @@ public static class OutputGenerator
                 case "ImplementationGuide":
                     targetDirectory = conformancePath;
                     targetList = categorizedFiles.ConformanceFiles;
+                    fileCategory = "Conformance"; 
                     break;
 
                 case "CodeSystem":
@@ -179,34 +214,35 @@ public static class OutputGenerator
                 case "ConceptMap":
                 case "NamingSystem":
                     targetDirectory = terminologyPath;
-                    targetList = categorizedFiles.TerminologyFiles; 
+                    targetList = categorizedFiles.TerminologyFiles;
+                    fileCategory = "Terminology"; 
                     break;
 
-                default:
+                default: // Assume others are Examples for directory placement
                     targetDirectory = examplesPath;
                     targetList = categorizedFiles.ExampleFiles;
+                    fileCategory = "Example"; 
                     break;
             }
             string fullPath = Path.Combine(targetDirectory, markdownFileName);
-            targetList.Add(baseFileName); 
+            targetList.Add(baseFileName);
 
             try
             {
-                 if (resource.Id == null) { Logger.Warning($"Resource type {resource.TypeName} found with no ID. Assigning temporary filename: {markdownFileName}"); }
+                if (resource.Id == null) { Logger.Warning($"..."); }
 
-                 string markdownContentString = MarkdownGenerator.GenerateMarkdown(resource, baseFileName);
-                
-                 File.WriteAllText(fullPath, markdownContentString); // Use the generated string
-                 Logger.Cyan($"  Successfully wrote: {Path.Combine(Path.GetFileName(targetDirectory), markdownFileName)}");
-                 filesWritten++;
+                string markdownContentString = MarkdownGenerator.GenerateMarkdown(resource, baseFileName, fileCategory);
+
+                File.WriteAllText(fullPath, markdownContentString);
+                Logger.Cyan($"  Successfully wrote: {Path.Combine(Path.GetFileName(targetDirectory), markdownFileName)}");
+                filesWritten++;
             }
-            catch (IOException ioEx) { Logger.Error($"    Error writing file {markdownFileName} to {Path.GetFileName(targetDirectory)}: {ioEx.Message}"); }
-            catch (Exception ex) { Logger.Error($"    Unexpected error generating file for {resource.TypeName} (ID: {resource.Id ?? "none"}): {ex.Message}"); }
+            catch (IOException) { Logger.Error($"..."); }
+            catch (Exception) { Logger.Error($"..."); }
         }
         Logger.Info($"\nOutput generation complete. Wrote {filesWritten} resource files.");
         return categorizedFiles;
     }
-
     private static void GenerateIndexPage(string indexPagePath, CategorizedFiles categorizedFiles)
     {
         Logger.Info($"Generating index page: {indexPagePath}");
@@ -241,10 +277,10 @@ public static class OutputGenerator
 
         sb.AppendLine($"## {title}");
         sb.AppendLine();
-        sb.AppendLine("|         |         |         |         |         |");
-        sb.AppendLine("| :------ | :------ | :------ | :------ | :------ |");
+        sb.AppendLine("|         |         |         |         |");
+        sb.AppendLine("| :------ | :------ | :------ | :------ |");
 
-        int columns = 5;
+        int columns = 4;
         for (int i = 0; i < fileList.Count; i++)
         {
             if (i % columns == 0)
@@ -270,6 +306,23 @@ public static class OutputGenerator
         sb.AppendLine();
     }
 
+
+    private static void GenerateStaticRootToc(string rootTocPath)
+    {
+        Logger.Info("Generating static root toc.yaml...");
+        try
+        {
+            // Simple static content
+            string[] tocContent = { "- name: Home", "  filename: Home" };
+            File.WriteAllLines(rootTocPath, tocContent);
+            Logger.Success($"Successfully wrote: {Path.GetFileName(rootTocPath)}");
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"Failed to generate static root toc.yaml: {ex.Message}");
+        }
+    }
+
     private static void GenerateTocFiles(string homeDirectoryPath)
     {
         if (!Directory.Exists(homeDirectoryPath))
@@ -281,69 +334,66 @@ public static class OutputGenerator
         GenerateTocForDirectory(homeDirectoryPath); // Start recursion from Home
     }
 
-    private static void GenerateTocForDirectory(string directoryPath)
+ private static void GenerateTocForDirectory(string directoryPath)
     {
         try
         {
-            var tocEntries = new List<string>(); // Using List<string> for simple YAML lines
+            var tocEntries = new List<string>();
 
+            // Get subdirectories, **FILTERING OUT TemplatePages**
             var subDirectories = Directory.GetDirectories(directoryPath)
-                                          .OrderBy(d => d) // Sort alphabetically
+                                          .Where(d => !Path.GetFileName(d).Equals("TemplatePages", StringComparison.OrdinalIgnoreCase)) // Exclude TemplatePages
+                                          .OrderBy(d => d)
                                           .ToList();
 
             foreach (var subDir in subDirectories)
             {
                 string folderName = Path.GetFileName(subDir);
-                // YAML entry for a folder
                 tocEntries.Add($"- name: {folderName}");
-                tocEntries.Add($"  filename: {folderName}"); // No suffix for folders
+                tocEntries.Add($"  filename: {folderName}");
             }
 
-            // Get markdown files in the current directory
+            // Get markdown files (logic remains the same)
             var files = Directory.GetFiles(directoryPath, "*.md")
-                               .OrderBy(f => f) // Sort alphabetically
+                               .OrderBy(f => f)
                                .ToList();
-
             foreach (var file in files)
             {
-                string fileNameWithExtension = Path.GetFileName(file);
-                string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fileNameWithExtension);
-                // We need the base name to construct the .page.md suffix filename
-                string pageFileName = Path.ChangeExtension(fileNameWithExtension, ".page.md");
-
-                // YAML entry for a file
-                tocEntries.Add($"- name: {fileNameWithoutExtension}"); // Use name without extension
-                tocEntries.Add($"  filename: {pageFileName}"); // Add .page.md suffix
+                // ... (file processing logic from previous step remains the same) ...
+                string originalFileName = Path.GetFileName(file);
+                string nameForDisplay = Path.GetFileNameWithoutExtension(originalFileName);
+                if (nameForDisplay.EndsWith(".page", StringComparison.OrdinalIgnoreCase)) {
+                    nameForDisplay = Path.GetFileNameWithoutExtension(nameForDisplay);
+                }
+                string filenameForLink;
+                if (originalFileName.EndsWith(".page.md", StringComparison.OrdinalIgnoreCase)) {
+                    filenameForLink = originalFileName;
+                } else {
+                    string baseName = Path.GetFileNameWithoutExtension(originalFileName);
+                    filenameForLink = baseName + ".page.md";
+                }
+                tocEntries.Add($"- name: {nameForDisplay}");
+                tocEntries.Add($"  filename: {filenameForLink}");
             }
 
-            // Only write toc.yaml if there are entries
+            // Write toc.yaml if entries exist (logic remains the same)
             if (tocEntries.Any())
             {
+                // ... (write file logic) ...
                 string tocFilePath = Path.Combine(directoryPath, "toc.yaml");
-                try
-                {
-                    File.WriteAllLines(tocFilePath, tocEntries); // Write lines directly
-                    Logger.Cyan($"  Successfully wrote: {Path.Combine(Path.GetFileName(directoryPath), "toc.yaml")}");
-                }
-                catch (IOException ioEx)
-                {
-                    Logger.Error($"    Error writing toc.yaml in {Path.GetFileName(directoryPath)}: {ioEx.Message}");
-                }
+                 try { File.WriteAllLines(tocFilePath, tocEntries); Logger.Cyan($"  Successfully wrote: {Path.Combine(Path.GetFileName(directoryPath), "toc.yaml")}"); }
+                 catch (IOException ioEx) { Logger.Error($"    Error writing toc.yaml in {Path.GetFileName(directoryPath)}: {ioEx.Message}"); }
             }
-            else
+
+            // Recurse into subdirectories (now uses the filtered list)
+            foreach (var subDir in subDirectories) // <- uses the filtered list
             {
-                Logger.Warning($"  No files or subdirectories found in {directoryPath}. Skipping toc.yaml generation.");
-            }
-            // --- Recurse into subdirectories ---
-            foreach (var subDir in subDirectories)
-            {
-                GenerateTocForDirectory(subDir); // Recursive call
+                GenerateTocForDirectory(subDir);
             }
         }
         catch (Exception ex)
         {
-            // Log errors accessing directory contents etc.
-            Logger.Error($"Error processing directory for TOC {directoryPath}: {ex.Message}");
+             Logger.Error($"Error processing directory for TOC {directoryPath}: {ex.Message}");
         }
-    } 
+    }
 }
