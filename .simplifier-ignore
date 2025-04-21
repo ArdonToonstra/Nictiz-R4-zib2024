@@ -1,0 +1,6 @@
+
+!util/
+!.git/*
+!qa.yaml
+!.local-packages/
+

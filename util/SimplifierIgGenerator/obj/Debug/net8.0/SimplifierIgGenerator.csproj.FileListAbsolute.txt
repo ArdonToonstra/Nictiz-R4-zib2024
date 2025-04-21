@@ -34,3 +34,12 @@ C:\git\nictiz-r4-zib2024-forked\util\SimplifierIgGenerator\obj\Debug\net8.0\refi
 C:\git\nictiz-r4-zib2024-forked\util\SimplifierIgGenerator\obj\Debug\net8.0\SimplifierIgGenerator.pdb
 C:\git\nictiz-r4-zib2024-forked\util\SimplifierIgGenerator\obj\Debug\net8.0\SimplifierIgGenerator.genruntimeconfig.cache
 C:\git\nictiz-r4-zib2024-forked\util\SimplifierIgGenerator\obj\Debug\net8.0\ref\SimplifierIgGenerator.dll
+C:\git\nictiz-r4-zib2024-forked\util\SimplifierIgGenerator\bin\Debug\net8.0\Microsoft.Extensions.DependencyInjection.dll
+C:\git\nictiz-r4-zib2024-forked\util\SimplifierIgGenerator\bin\Debug\net8.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll
+C:\git\nictiz-r4-zib2024-forked\util\SimplifierIgGenerator\bin\Debug\net8.0\Microsoft.Extensions.Logging.dll
+C:\git\nictiz-r4-zib2024-forked\util\SimplifierIgGenerator\bin\Debug\net8.0\Microsoft.Extensions.Logging.Abstractions.dll
+C:\git\nictiz-r4-zib2024-forked\util\SimplifierIgGenerator\bin\Debug\net8.0\Microsoft.Extensions.Logging.Configuration.dll
+C:\git\nictiz-r4-zib2024-forked\util\SimplifierIgGenerator\bin\Debug\net8.0\Microsoft.Extensions.Logging.Console.dll
+C:\git\nictiz-r4-zib2024-forked\util\SimplifierIgGenerator\bin\Debug\net8.0\Microsoft.Extensions.Options.dll
+C:\git\nictiz-r4-zib2024-forked\util\SimplifierIgGenerator\bin\Debug\net8.0\Microsoft.Extensions.Options.ConfigurationExtensions.dll
+C:\git\nictiz-r4-zib2024-forked\util\SimplifierIgGenerator\bin\Debug\net8.0\System.Diagnostics.DiagnosticSource.dll

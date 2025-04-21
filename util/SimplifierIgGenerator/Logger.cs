@@ -55,12 +55,12 @@ public static class Logger
     }
 
     // Public logging methods
-    public static void Info(string message) => Log(LogLevel.Info, message, Console.ForegroundColor); // Keep original color
+    public static void Info(string message) => Log(LogLevel.Info, message, Console.ForegroundColor); 
     public static void Success(string message) => Log(LogLevel.Success, message, ConsoleColor.Green);
     public static void Warning(string message) => Log(LogLevel.Warning, message, ConsoleColor.Yellow);
     public static void Error(string message) => Log(LogLevel.Error, message, ConsoleColor.Red);
-    public static void Magenta(string message) => Log(LogLevel.Info, message, ConsoleColor.Magenta); // For specific highlighting like guide.yaml
-    public static void Cyan(string message) => Log(LogLevel.Info, message, ConsoleColor.Cyan);     // For specific highlighting like file writes
+    public static void Magenta(string message) => Log(LogLevel.Info, message, ConsoleColor.Magenta); 
+    public static void Cyan(string message) => Log(LogLevel.Info, message, ConsoleColor.Cyan);   
 
 
     private enum LogLevel

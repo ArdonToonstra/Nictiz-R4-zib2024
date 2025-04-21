@@ -1,12 +1,5 @@
 ﻿// Program.cs
 using Hl7.Fhir.Model;
-using Microsoft.Extensions.Configuration; 
-using Microsoft.Extensions.DependencyInjection; 
-using Microsoft.Extensions.Logging; 
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq; 
 
 class Program
 {
